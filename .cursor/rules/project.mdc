@@ -1,0 +1,12 @@
+---
+description: CoHendrix project rules. AGENTS.md is the source of truth.
+alwaysApply: true
+---
+
+# CoHendrix
+
+`AGENTS.md` is the source of truth for how to work in this repository.
+
+Before starting, read `AGENTS.md`, then `CONTEXT.md` and the latest `CHANGELOG.md` entry. After finishing, append a changelog entry and update `CONTEXT.md` if goals, status, or open questions changed.
+
+Do not treat this rule file as a second rulebook. If it conflicts with `AGENTS.md`, follow `AGENTS.md`.
