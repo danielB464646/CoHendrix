@@ -9,6 +9,7 @@ The ARD is not written yet. A session that writes it should start from the sourc
 3. [`docs/decisions/0001-v1-scope-after-requirements-review.md`](../decisions/0001-v1-scope-after-requirements-review.md) — scope and naming locked since proposal v2.
 4. [`deliverables/2026-11-07-proposal/`](../../deliverables/2026-11-07-proposal/) — proposal v2. Use it as background where the review does not restate a topic. Where they differ, the review is later.
 5. [`CONTEXT.md`](../../CONTEXT.md) — open questions. Leave them open.
+6. [`ard-reference/`](ard-reference/) — course ARD template, grading sheet, and two past example ARDs. Use them for structure and grading, not as content.
 
 Slide 5 of the deck is the architecture diagram. The extract lists its labels. Do not redraw it with new boxes or flows.
 
