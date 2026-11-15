@@ -1,10 +1,17 @@
 # Co-Hendrix — Application Requirements Document (ARD)
 
-> **Draft status:** Abstract and Chapters 1–5 approved by the team. Appendices and the final pass (numbering, figures) are not written yet.
+> **Draft status:** Abstract and Chapters 1–5 approved by the team, then revised in a review pass (15 Nov 2026; decisions in ADRs 0002–0012). Appendices A–D drafted, awaiting team review. Risk owners are still open, and the final pass (numbering, figures) is not done yet.
 
 **Project:** Co-Hendrix — a verified AI tool that generates and edits multi-track MIDI within the rules you set
 
-**Team:** Oren Kashani · Stav Ronen · Daniel Blanga · Eden Sabika
+**Team:**
+
+| Name | Student ID |
+| --- | --- |
+| Oren Kashani | 328271762 |
+| Stav Ronen | 207458571 |
+| Daniel Blanga | 336182621 |
+| Eden Sabika | 208573162 |
 
 **Academic advisor:** Dr. Avi Segal
 
@@ -18,7 +25,7 @@
 
 This document is the first of three documents describing the final project in the software engineering program. It describes the requirements of the software project *from the standpoint of the customer*.
 
-Co-Hendrix is a verified AI tool that generates and edits multi-track MIDI within rules the producer sets. The producer uploads a MIDI sketch they wrote and locks exactly one region — specific tracks and bars — to work on. Rules can come from two sources. First, the producer can state constraints and limits in their own words, the same way they would talk to a chat assistant (for example, "keep the bass below C3" or "no notes on the off-beats"). Co-Hendrix turns each such statement into a rule it can check and shows it back to the producer. Second, the producer may attach 1–10 reference MIDI files of songs they like; from these files Co-Hendrix extracts key, pitch range and rhythm grid and suggests them as style rules. Reference files are optional: the producer can work with verbal constraints only, with suggested rules only, with both, or with neither. Whatever the source, nothing becomes a rule until the producer confirms it. The producer can work on several MIDI sketches at once, each in its own chat window with its own rules and history, and can choose which supported LLM model to use.
+Co-Hendrix is a verified AI tool that generates and edits multi-track MIDI within rules the producer sets. The producer uploads a MIDI sketch they wrote and locks exactly one region — specific tracks and bars — to work on. Rules can come from two sources. First, the producer can state constraints and limits in their own words, the same way they would talk to a chat assistant (for example, "keep the bass below C3" or "no notes on the off-beats"). Co-Hendrix turns each such statement into a rule it can check and shows it back to the producer. Second, Co-Hendrix extracts key, pitch range and rhythm grid from the producer's sketch and suggests them as style rules. The producer can work with verbal constraints only, with suggested rules only, with both, or with neither. Separately, the producer may attach 1–10 reference MIDI files of songs they like; these are not a source of rules, but are sent to the LLM as examples of the style the producer is after. Whatever the source, nothing becomes a rule until the producer confirms it. The producer can work on several MIDI sketches at once, each in its own chat window with its own rules and history, and can choose which supported LLM model to use.
 
 For each request, a cloud large language model (LLM) proposes exactly one patch for the locked region. Co-Hendrix does not trust that patch: it checks it in code. Notes outside the locked region must be unchanged, and every confirmed rule must hold. A patch that fails any check is blocked and is never applied, and the producer is told which rule failed. A patch that passes can be accepted or rejected as a whole, and the result is exported as a `.mid` file that the producer opens in their own digital audio workstation (DAW).
 
@@ -40,7 +47,7 @@ What Co-Hendrix guarantees: confirmed rules hold, and protected bars stay untouc
 2. **Edits leak.** When an AI tool is asked to change one part, it may also change bars the producer has already finished. The producer has to find and undo those changes by hand.
 3. **No guarantees.** Nothing proves that the result still stays in the intended key, inside the instrument's note range, or on the intended rhythm grid. The producer has to check by ear or by eye.
 
-**Existing tools.** AI MIDI tools exist, but none we found guarantee the edit. Table 1 summarises the closest tools, based on their public documentation as of November 2026; hands-on testing is planned for Sprint 1. A fuller survey appears in the appendix on similar products.
+**Existing tools.** AI MIDI tools exist, but none we found guarantee the edit. Table 1 summarises the closest tools, based on their public documentation as of November 2026; hands-on testing is planned for Sprint 1. A fuller survey appears in Appendix B — Similar products (Chapter 6).
 
 *Table 1 — Closest existing AI MIDI tools*
 
@@ -51,7 +58,7 @@ What Co-Hendrix guarantees: confirmed rules hold, and protected bars stay untouc
 | Staccato | Continues your MIDI; claims to learn your style | Protected bars, verification |
 | Logic Session Players | Bass and keys follow the chord track | Prompts; works only in Logic |
 
-**Where Co-Hendrix fits.** Co-Hendrix addresses the gap in the right-hand column of Table 1. It separates *generation*, which is left to an untrusted LLM, from *verification*, which is done by deterministic code. The producer declares the region and the rules — in their own words, or by confirming rules suggested from their reference songs — and the system enforces them. Protected bars stay untouched, rules are checked in code, and a patch that breaks a rule is never applied.
+**Where Co-Hendrix fits.** Co-Hendrix addresses the gap in the right-hand column of Table 1. It separates *generation*, which is left to an untrusted LLM, from *verification*, which is done by deterministic code. The producer declares the region and the rules — in their own words, or by confirming rules suggested from their own sketch — and the system enforces them. Protected bars stay untouched, rules are checked in code, and a patch that breaks a rule is never applied.
 
 ### 1.2 Context
 
@@ -82,8 +89,8 @@ The external parties and the interfaces between them and Co-Hendrix are:
 
 - **Producer (user).** An independent or small-studio MIDI producer and the only human who operates the system. The producer talks to Co-Hendrix directly: they select the region to work on, write requests and constraints in their own words, and confirm or edit the rules the system suggests ("prompts, confirmations" in Figure 1). Co-Hendrix answers with the edited result for the producer to accept or reject, or with an explanation of why the request failed and which rule was broken.
 - **DAW.** The producer's existing workstation (for example Ableton Live, FL Studio or Logic Pro). Co-Hendrix has no direct connection to the DAW and is not a DAW plugin. The producer exports a sketch from the DAW as a `.mid` file and uploads it to Co-Hendrix; after accepting a result, they download the verified `.mid` file and open it in the DAW again. All hand-editing stays in the DAW: Co-Hendrix provides no built-in note editor.
-- **Reference library.** Optional. A set of 1–10 MIDI files of songs the producer likes, uploaded by hand. Co-Hendrix uses them to suggest style rules (key, pitch range, rhythm grid) and may send them to the LLM as context for the producer's requests. They are stored with the chat window they were uploaded to and deleted with it.
-- **LLM provider.** An external cloud service reached through its API. For each request, Co-Hendrix sends a prompt with the request, the locked region, the active rules and musical context — for example the other tracks, the surrounding bars and, when relevant, the reference songs — and receives back a proposed patch. The context helps the LLM fit its notes to the music; it does not widen what the patch may change. The provider is treated as untrusted: every patch it returns is verified by Co-Hendrix before the producer sees it as a valid result. The provider is swappable — Co-Hendrix is not tied to a specific model or vendor — and the producer can choose which supported model to use. The provider limits the cost and latency of each request.
+- **Reference library.** Optional. A set of 1–10 MIDI files of songs the producer likes, uploaded by hand. Co-Hendrix sends them to the LLM as context — examples of the style the producer is after — for the producer's requests. They are not a source of rules: suggested rules come from the sketch. They are stored with the chat window they were uploaded to and deleted with it.
+- **LLM provider.** An external cloud service reached through its API. For each request, Co-Hendrix sends a prompt with the request, the locked region, the active rules and musical context — for example the other tracks, the surrounding bars and, when relevant, the reference songs — and receives back a proposed patch. The context helps the LLM fit its notes to the music; it does not widen what the patch may change. Co-Hendrix also uses the LLM to translate constraints the producer states in words into proposed rules, which the producer must confirm before they apply. The provider is treated as untrusted: every patch it returns is verified by Co-Hendrix before the producer sees it as a valid result. The provider is swappable — Co-Hendrix is not tied to a specific model or vendor — and the producer can choose which supported model to use. The provider limits the cost and latency of each request.
 
 Everything the producer can rely on — locked bars staying untouched and confirmed rules holding — is enforced inside the Co-Hendrix block, not by the LLM and not by the DAW.
 
@@ -93,7 +100,7 @@ Everything the producer can rely on — locked bars staying untouched and confir
 
 Co-Hendrix gives producers the speed of AI help without giving up control over their music. The producer stays in charge of *what* may change and *which rules* must hold; the AI only proposes; the system checks every proposal in code before it can reach the producer's file. The intended way of working has five steps:
 
-1. **You set the rules.** The producer states the constraints the MIDI must be generated or edited by — in their own words, as they would to a chat assistant, or by confirming style rules that Co-Hendrix suggests from their reference songs. Nothing is a rule until the producer confirms it.
+1. **You set the rules.** The producer states the constraints the MIDI must be generated or edited by — in their own words, as they would to a chat assistant, or by confirming style rules that Co-Hendrix suggests from their sketch. Reference songs they like can be attached as style examples for the AI. Nothing is a rule until the producer confirms it.
 2. **You pick the part.** The producer chooses the tracks and bars to work on. Everything else is protected.
 3. **The AI proposes.** An external LLM proposes one change for that part only — an edit of notes that are already there, or a new part in an empty section.
 4. **The system verifies.** Co-Hendrix checks that no confirmed rule is broken and that every other part of the file is unchanged. A change that fails is blocked, and the producer sees why.
@@ -107,7 +114,7 @@ Co-Hendrix gives producers the speed of AI help without giving up control over t
 
 - **Trust.** No AI change may alter notes outside the region the producer picked, and no change that breaks a confirmed rule may be applied.
 - **Control.** The producer decides the region and the rules, and accepts or rejects each result as a whole.
-- **Style without training.** Help the producer express their style through explicit rules — stated in words or suggested from songs they like — without claiming that the system learns their taste.
+- **Style without training.** Help the producer express their style through explicit rules — stated in words or suggested from their own sketch — and through songs they like, sent to the AI as examples, without claiming that the system learns their taste.
 - **Fit the existing workflow.** Work with standard `.mid` files from any DAW, so the producer does not have to change tools.
 - **Transparency.** When a change is blocked, tell the producer exactly which rule failed.
 
@@ -129,7 +136,7 @@ Table 2 lists the people and parties that are relevant to Co-Hendrix, what they 
 
 **Customer.** The customer is a working producer and DJ and acts as the voice of the target users. They decide which features matter most, set priorities, and accept or reject the delivered system. We expect the customer to give regular feedback on drafts and to provide sample sketches and reference songs for testing.
 
-**End users.** The producers who use Co-Hendrix are the only human actors of the system (see Chapter 2). They are skilled in music and in their DAW but are not expected to be programmers or AI experts. In this version there are no administrator roles and no multi-user features: each producer works alone on their own files.
+**End users.** The producers who use Co-Hendrix are the only human actors of the system (see Chapter 2). They are skilled in music and in their DAW but are not expected to be programmers or AI experts. In this version there are no administrator roles and no multi-user features: each producer works alone on their own files, in their own Co-Hendrix deployment hosted by the team and opened through a private link and access key (NFR17).
 
 **External service.** The LLM provider does not take part in defining requirements, but the requirements must take it into account: the provider must be replaceable, and its cost and latency must be bounded.
 
@@ -143,7 +150,7 @@ Co-Hendrix is an interactive tool. The producer works in chat windows. Each chat
 - **Region.** The tracks and bars the producer allows to change in this request — exactly one region per request. The region may already contain notes (an edit) or be empty (a new part).
 - **Request.** A short instruction in the producer's own words describing the change, for example: "Change only the bass in bars 5–8. Play more notes. Leave the drums."
 - **Verbal constraints.** Limits the producer states in their own words, for example "keep the bass below C3". Co-Hendrix turns each one into a rule and shows it back for confirmation.
-- **Reference MIDI files (optional).** 1–10 `.mid` files of songs the producer likes, used to suggest style rules and as context for the LLM.
+- **Reference MIDI files (optional).** 1–10 `.mid` files of songs the producer likes, sent to the LLM as style context. They are not used to suggest rules.
 - **Rule confirmations.** The producer's confirmation, edit or rejection of each suggested or stated rule.
 - **Chord progression (optional).** A chord progression entered by hand. Co-Hendrix does not extract chords automatically.
 - **Decision on the result.** Accept or reject a valid patch as a whole.
@@ -156,7 +163,7 @@ From the producer's point of view, Co-Hendrix offers the following capabilities:
 
 1. **Manage chat windows** — open a new chat window for a sketch, switch between saved windows, choose the LLM model for a window, and delete a window.
 2. **Import a sketch** — upload a `.mid` file into a chat window and see its tracks and bars.
-3. **Set rules** — state constraints in words, and/or upload reference files and review the rules Co-Hendrix suggests from them (key, pitch range, rhythm grid). Confirm, edit or reject each rule. Only confirmed rules are enforced.
+3. **Set rules** — state constraints in words, and/or review the rules Co-Hendrix suggests from the sketch (key, pitch range, rhythm grid). Confirm, edit or reject each rule. Only confirmed rules are enforced. Optionally, upload reference files as style examples for the LLM.
 4. **Select a region** — lock the tracks and bars the request may change. Everything outside the region is protected.
 5. **Ask for a change** — edit the notes already in the region, or generate a new part in an empty region.
 6. **Review the result** — see and play back what changed in the region, and whether every check passed; if a check failed, see which rule failed.
@@ -169,7 +176,7 @@ Co-Hendrix deliberately does not provide a built-in note editor: hand-editing st
 
 For each request, Co-Hendrix performs the following steps (without implementation details):
 
-1. **Prepare the request.** Combine the producer's request, the locked region, the active rules and musical context into a prompt. The context may include the other tracks and the surrounding bars of the sketch and, when relevant, the window's reference songs. Context helps the LLM fit the new notes; it does not change what the patch may touch.
+1. **Prepare the request.** Combine the producer's request, the locked region, the active rules, the chord progression if one was entered, and musical context into a prompt. The context may include the other tracks and the surrounding bars of the sketch and, when relevant, the window's reference songs. Context helps the LLM fit the new notes; it does not change what the patch may touch.
 2. **Obtain a patch.** Ask the external LLM for exactly one patch: a set of note additions, removals and changes for the locked region only.
 3. **Verify.** Check the patch in code, independently of the LLM:
    - no note outside the locked region is added, removed or changed;
@@ -184,7 +191,7 @@ Verbal constraints that cannot be expressed as a rule Co-Hendrix can check (for 
 
 - **Result view.** The proposed change in the locked region, together with the outcome of every check.
 - **Failure report.** When a request is blocked: which rule failed (for example "failed: key"), or that the LLM failed. The file is unchanged.
-- **Suggested rules.** Key, pitch range and rhythm grid extracted from the reference files, for the producer to confirm.
+- **Suggested rules.** Key, pitch range and rhythm grid extracted from the sketch, for the producer to confirm.
 - **Verified `.mid` file.** The updated sketch, downloaded by the producer and opened in their DAW.
 - **Run record.** A record of each request and its result.
 
@@ -218,6 +225,7 @@ Co-Hendrix has no special hardware interfaces. The producer uses an ordinary per
 *External events* (from the LLM provider):
 
 - A patch is returned.
+- A proposed rule, translated from a constraint stated in words, is returned.
 - The provider returns an error, or does not respond in time.
 
 *Output events* (to the producer):
@@ -239,13 +247,13 @@ Actors are external to Co-Hendrix and exchange data with it. There is one human 
 
 **Producer (primary actor).** An independent or small-studio MIDI producer, working alone on their own files. They sketch multi-track MIDI ideas of 8–16 bars in a DAW and want AI help that does not damage finished work. They know music and their DAW well; they are not expected to know programming or how LLMs work. The producer is the only actor who starts use cases: they open chat windows, choose the model, upload sketches and reference files, state rules, select regions, make requests, and accept or reject results. There are no administrator roles and no multi-user features in this version.
 
-**LLM provider (supporting actor).** An external cloud service. It receives a prompt from Co-Hendrix and returns a proposed patch, or an error. It may receive musical context, including the reference songs of the chat window, and its output is always verified before use. It does not start any use case.
+**LLM provider (supporting actor).** An external cloud service. It receives a prompt from Co-Hendrix and returns a proposed patch, or an error. It also translates constraints the producer states in words into proposed rules (UC5), which the producer must confirm. It may receive musical context, including the reference songs of the chat window, and its output is always verified before use. It does not start any use case.
 
 **DAW (supporting actor).** The producer's own workstation. It has no live connection to Co-Hendrix: the producer moves `.mid` files between the DAW and Co-Hendrix by hand. It is the source of the sketch and the destination of the verified result.
 
 ### 2.2 Use Cases
 
-Co-Hendrix supports two situations, each with or without confirmed rules (Table 3). A fifth use case, UC5, sets up the rules and is included by UC2 and UC4. A sixth, UC6, lets the producer open, switch and delete chat windows; every other use case takes place inside one chat window.
+Co-Hendrix supports two situations, each with or without confirmed rules (Table 3). A fifth use case, UC5, sets up the rules; UC2 and UC4 require rules already confirmed through UC5 (a precondition, not a step they repeat). A sixth, UC6, lets the producer open, switch and delete chat windows; every other use case takes place inside one chat window.
 
 *Table 3 — Use-case map*
 
@@ -253,10 +261,10 @@ Co-Hendrix supports two situations, each with or without confirmed rules (Table 
 | --- | --- | --- |
 | **Edit an existing section** | UC1 | UC2 |
 | **Generate a part in an empty section** | UC3 | UC4 |
-| **Set up the rules** (preparatory stage) | — | UC5 (included by UC2 and UC4) |
+| **Set up the rules** (preparatory stage) | — | UC5 (done before UC2 and UC4; rules stay active in the chat window) |
 | **Manage chat windows** | UC6 | UC6 |
 
-Rules come from two sources: constraints the producer states in their own words, and style rules suggested from reference files. In every case, nothing is a rule until the producer confirms it.
+Rules come from two sources: constraints the producer states in their own words, and style rules suggested from the sketch. Reference files are not a source of rules; they are style context for the LLM. In every case, nothing is a rule until the producer confirms it.
 
 *Figure 2 — Use-case diagram*
 
@@ -279,12 +287,11 @@ flowchart LR
     P --- UC4
     P --- UC5
     P --- UC6
-    UC2 -. "include" .-> UC5
-    UC4 -. "include" .-> UC5
     UC1 --- L
     UC2 --- L
     UC3 --- L
     UC4 --- L
+    UC5 --- L
     UC1 -.- D
     UC2 -.- D
     UC3 -.- D
@@ -375,14 +382,15 @@ How to read Figure 3:
 
 **Alternative flows:**
 
-- **4.a The LLM fails** (error or no response). Co-Hendrix abstains: nothing is applied, the file is unchanged, and the producer is told the LLM failed.
+- **2.a The locked region is larger than 16 bars × 4 tracks.** Co-Hendrix refuses the request, tells the producer the limit, and sends nothing to the LLM (FR25).
+- **4.a The LLM fails** (error or no response), or the request reaches the 60-second time limit (NFR2). Co-Hendrix abstains: nothing is applied, the file is unchanged, and the producer is told the LLM failed.
 - **5.a The patch changes notes outside the locked region.** Co-Hendrix sends the violation back to the LLM and asks for a corrected patch, up to 3 times. If a corrected patch passes, continue at step 6.
 - **5.b Still failing after 3 repairs.** Co-Hendrix abstains: the patch is not applied, the file is unchanged, and the producer sees the violation.
 - **6.a The producer rejects the valid patch.** The region stays as it was. The producer may send a new request for the same region (back to step 3).
 
 **Postconditions:** Only the locked existing region changed. No rules were enforced other than protecting everything outside the region.
 
-**Covered requirements:** FR1–FR8, FR13, FR17–FR21.
+**Covered requirements:** FR1–FR8, FR13, FR17–FR21, FR25.
 
 ---
 
@@ -398,12 +406,13 @@ How to read Figure 3:
 
 1. The producer has loaded a MIDI sketch they wrote into a chat window.
 2. The locked region already contains notes.
+3. At least one rule is confirmed in this chat window (UC5). In the example below, Co-Hendrix suggested key, pitch range and rhythm grid from the sketch as rules, and the producer confirmed them. The producer also attached 2 reference MIDI files of songs they like as style context for the LLM.
 
 **Main success scenario** (example from the requirements review):
 
 1. The producer provides an 8-bar MIDI sketch (drums and bass, in A minor).
-2. The producer sets up rules (**include UC5**): they attach 2 reference MIDI files of songs they like; Co-Hendrix suggests key, pitch range and rhythm grid as rules, and the producer confirms them.
-3. They lock the bass in bars 5–8 and request: "Change only the bass in bars 5–8. Play more notes. Leave the drums."
+2. They lock the bass in bars 5–8.
+3. They request: "Change only the bass in bars 5–8. Play more notes. Leave the drums."
 4. Co-Hendrix asks the LLM for exactly one patch for that region.
 5. Co-Hendrix verifies the locked region and each confirmed rule.
 6. All checks pass. The producer reviews the result and accepts the patch as a whole.
@@ -413,14 +422,15 @@ Confirmed rules in this example: stay in A minor; stay in the bass's note range;
 
 **Alternative flows:**
 
-- **4.a The LLM fails.** Co-Hendrix abstains; the file is unchanged and the producer is told the LLM failed.
+- **2.a The locked region is larger than 16 bars × 4 tracks.** Co-Hendrix refuses the request, tells the producer the limit, and sends nothing to the LLM (FR25).
+- **4.a The LLM fails, or the request reaches the 60-second time limit (NFR2).** Co-Hendrix abstains; the file is unchanged and the producer is told the LLM failed.
 - **5.a A check fails** (example: the new bass uses a note that is not in A minor). Co-Hendrix sends the exact violation to the LLM ("bar 6: note not in A minor") and asks for a corrected patch, up to 3 times. If a corrected patch passes every check, continue at step 6.
 - **5.b Still failing after 3 repairs.** The patch is not applied, the file is unchanged, and the producer sees which rule failed (for example "failed: key").
 - **6.a The producer rejects the valid patch.** The region stays as it was; they may retry the same region (back to step 3).
 
 **Postconditions:** Only the bass in bars 5–8 changed. Drums and bars 1–4 stayed the same. All confirmed rules hold.
 
-**Covered requirements:** FR1–FR7, FR9–FR13, FR15, FR17–FR21 (FR14–FR16 through UC5).
+**Covered requirements:** FR1–FR7, FR9–FR13, FR15, FR17–FR21, FR25 (FR14–FR16 through UC5, which sets up the rules beforehand).
 
 ---
 
@@ -450,14 +460,15 @@ Confirmed rules in this example: stay in A minor; stay in the bass's note range;
 
 **Alternative flows:**
 
-- **4.a The LLM fails.** Co-Hendrix abstains; the section stays empty and the file is unchanged.
+- **2.a The locked region is larger than 16 bars × 4 tracks.** Co-Hendrix refuses the request, tells the producer the limit, and sends nothing to the LLM (FR25).
+- **4.a The LLM fails, or the request reaches the 60-second time limit (NFR2).** Co-Hendrix abstains; the section stays empty and the file is unchanged.
 - **5.a The patch writes outside the empty region.** Co-Hendrix sends the violation to the LLM and asks for a corrected patch, up to 3 times. If a corrected patch passes, continue at step 6.
 - **5.b Still failing after 3 repairs.** Co-Hendrix abstains; the section stays empty and the producer sees the violation.
 - **6.a The producer rejects the patch.** The section stays empty. They may retry the same region (back to step 3).
 
 **Postconditions:** New notes exist only in the previously empty region. The rest of the file is unchanged. No rules were enforced other than protecting everything outside the region.
 
-**Covered requirements:** FR1–FR8, FR13, FR17–FR21.
+**Covered requirements:** FR1–FR8, FR13, FR17–FR21, FR25.
 
 ---
 
@@ -473,12 +484,13 @@ Confirmed rules in this example: stay in A minor; stay in the bass's note range;
 
 1. The producer has loaded a MIDI sketch they wrote into a chat window.
 2. The locked region has no notes.
+3. At least one rule is confirmed in this chat window (UC5) — suggested from the sketch, stated in the producer's own words, or both.
 
 **Main success scenario:**
 
 1. The producer provides their MIDI sketch.
-2. The producer sets up rules (**include UC5**) — from 1–10 reference files, from constraints stated in their own words, or both — and confirms them.
-3. They lock an empty region and ask Co-Hendrix to generate a new part there only.
+2. They lock an empty region (tracks and bars with no notes).
+3. They ask Co-Hendrix to generate a new part in that region only.
 4. Co-Hendrix asks the LLM for exactly one patch for that region.
 5. Co-Hendrix verifies the locked region and each confirmed rule.
 6. All checks pass. The producer reviews the new part and accepts it as a whole.
@@ -486,24 +498,25 @@ Confirmed rules in this example: stay in A minor; stay in the bass's note range;
 
 **Alternative flows:**
 
-- **4.a The LLM fails.** Co-Hendrix abstains; the section stays empty and the file is unchanged.
+- **2.a The locked region is larger than 16 bars × 4 tracks.** Co-Hendrix refuses the request, tells the producer the limit, and sends nothing to the LLM (FR25).
+- **4.a The LLM fails, or the request reaches the 60-second time limit (NFR2).** Co-Hendrix abstains; the section stays empty and the file is unchanged.
 - **5.a A check fails.** Co-Hendrix sends the exact violations to the LLM and asks for a corrected patch, up to 3 times. If a corrected patch passes every check, continue at step 6.
 - **5.b Still failing after 3 repairs.** The patch is not applied, the section stays empty, and the producer sees which rule failed.
 - **6.a The producer rejects the valid patch.** The section stays empty; they may retry the same region (back to step 3).
 
 **Postconditions:** The previously empty region contains a generated part that satisfies every confirmed rule. Everything else is unchanged.
 
-**Covered requirements:** FR1–FR7, FR9–FR13, FR15, FR17–FR21 (FR14–FR16 through UC5).
+**Covered requirements:** FR1–FR7, FR9–FR13, FR15, FR17–FR21, FR25 (FR14–FR16 through UC5, which sets up the rules beforehand).
 
 ---
 
 #### UC5 — Set up and confirm rules
 
-**Primary actor:** Producer. **Supporting actors:** none.
+**Primary actor:** Producer. **Supporting actors:** LLM provider (translates stated constraints only).
 
-**Description:** The producer defines the rules that later requests must obey, by stating constraints in their own words, by attaching reference files and reviewing the rules Co-Hendrix suggests from them, or both.
+**Description:** The producer defines the rules that later requests must obey, by stating constraints in their own words, by reviewing the rules Co-Hendrix suggests from the sketch, or both. They may also attach reference files as style context for the LLM.
 
-UC5 is a preparatory stage, not a goal on its own: the producer sets up rules in order to make constrained requests afterwards. It is written as a separate use case because it is shared by UC2 and UC4 (it is included by both), it has its own interaction with the producer (suggest, confirm, edit, reject) and its own alternative flows, and it is tested separately from the request flow. Once set up, the rules stay active for the following requests in the same chat window, so the producer does not repeat UC5 before each request. Rules confirmed in one chat window do not apply in any other window.
+UC5 is a preparatory stage, not a goal on its own: the producer sets up rules in order to make constrained requests afterwards. It is written as a separate use case because it is a precondition of both UC2 and UC4, it has its own interaction with the producer (suggest, confirm, edit, reject) and its own alternative flows, and it is tested separately from the request flow. Once set up, the rules stay active for the following requests in the same chat window, so the producer does not repeat UC5 before each request. Rules confirmed in one chat window do not apply in any other window.
 
 **Trigger:** The producer wants Co-Hendrix to enforce rules on the next requests in the current chat window.
 
@@ -513,9 +526,9 @@ UC5 is a preparatory stage, not a goal on its own: the producer sets up rules in
 
 **Main success scenario:**
 
-1. The producer attaches 1–10 reference MIDI files and/or states constraints in their own words (for example "keep the bass below C3").
-2. For each reference file, Co-Hendrix extracts key, pitch range and rhythm grid and suggests them as rules.
-3. For each verbal constraint, Co-Hendrix turns it into a rule it can check and shows the rule back to the producer in plain terms.
+1. The producer states constraints in their own words (for example "keep the bass below C3"), and may attach 1–10 reference MIDI files as style context for the LLM.
+2. Co-Hendrix marks the sketch's tracks on MIDI channel 10 as drum tracks, and the producer may mark or unmark any track as a drum track. Co-Hendrix then extracts key, pitch range and rhythm grid from the sketch and suggests them as rules.
+3. For each verbal constraint, Co-Hendrix asks the LLM to translate it into a rule of a type it can check, checks in code that the result is a well-formed rule of such a type, and shows the rule back to the producer in plain terms.
 4. Optionally, the producer enters a chord progression by hand.
 5. The producer confirms, edits or rejects each suggested and stated rule.
 6. Co-Hendrix activates the confirmed rules for the following requests in this chat window.
@@ -523,13 +536,14 @@ UC5 is a preparatory stage, not a goal on its own: the producer sets up rules in
 **Alternative flows:**
 
 - **1.a A file is not a valid `.mid`, or more than 10 reference files are attached.** Co-Hendrix rejects the upload and tells the producer why; files already accepted are kept.
-- **1.b The producer attaches no reference files.** Skip step 2; only verbal constraints are used.
+- **1.b The producer attaches no reference files.** The LLM gets no style examples; the suggested rules are not affected.
 - **3.a A verbal constraint cannot be expressed as a rule Co-Hendrix can check** (for example "make it sound happier"). Co-Hendrix tells the producer that this constraint will be passed to the LLM as guidance only and will not be verified. It is not part of the guarantee.
+- **3.b The LLM fails while translating** (error or no response), or returns something that is not a well-formed rule. The constraint is not turned into a rule, and the producer is told so. They may state it again later; rules suggested from the sketch are not affected.
 - **5.a The producer rejects every rule.** No rule becomes active; later requests behave like UC1 or UC3.
 
 **Postconditions:** The chat window's active rules are exactly the rules the producer confirmed. The reference files are stored with this chat window and may be sent to the LLM as context.
 
-**Covered requirements:** FR9–FR11, FR14–FR16.
+**Covered requirements:** FR9–FR11, FR14–FR16, FR25.
 
 ---
 
@@ -537,7 +551,7 @@ UC5 is a preparatory stage, not a goal on its own: the producer sets up rules in
 
 **Primary actor:** Producer. **Supporting actors:** none.
 
-**Description:** The producer works on several MIDI sketches at once, each in its own chat window. A chat window holds one sketch, its reference files, its confirmed rules, the chosen LLM model and the history of its requests. Windows are independent and are saved until the producer deletes them.
+**Description:** The producer works on several MIDI sketches at once, each in its own chat window. A chat window holds one sketch, its reference files, its confirmed rules, the chosen LLM model and the history of its requests — its run records (FR18), shown as a list of past requests with their outcomes. Windows are independent and are saved until the producer deletes them.
 
 **Trigger:** The producer wants to start work on a new sketch, return to an earlier one, or remove one.
 
@@ -551,18 +565,20 @@ UC5 is a preparatory stage, not a goal on its own: the producer sets up rules in
 4. They work in the window (UC1–UC5).
 5. They switch to another saved window; its sketch, rules, model and history are shown exactly as they left them.
 6. Later, they return to the first window and continue where they stopped.
+7. When they no longer need a window, they delete it. Co-Hendrix asks for confirmation, then deletes the window with its sketch, reference files, rules and history. Other windows are not affected.
 
 **Alternative flows:**
 
 - **2.a The uploaded file is not a valid `.mid`.** Co-Hendrix rejects it and tells the producer why; the window stays empty.
+- **4.a The producer uploads a new version of the sketch** (for example after editing it in the DAW). It replaces the sketch in the window; reference files, confirmed rules, chord progression, model and history are kept, and a patch still waiting for a decision is discarded (FR26). Confirmed rules are not re-checked against the new version's notes (see the note on FR20).
+- **4.b The producer changes the window's model.** Allowed whenever no request is running in the window. The new model is used from the next request; past run records keep the model they used (FR24).
 - **5.a A request is still running in the window the producer leaves.** It continues; its result is waiting when the producer returns.
-- **7. The producer deletes a window.** Co-Hendrix asks for confirmation, then deletes the window with its sketch, reference files, rules and history. Other windows are not affected.
 
-**Postconditions:** Each saved chat window keeps its own sketch, reference files, rules, model and history. Nothing done in one window changes another.
+**Postconditions:** Each saved chat window keeps its own sketch, reference files, rules, model and history until it is deleted; a deleted window and everything in it are gone. Nothing done in one window changes another.
 
-**Covered requirements:** FR1, FR22–FR24.
+**Covered requirements:** FR1, FR22–FR26.
 
-> **Note on requirement numbers.** FR1–FR14 are the requirements agreed at the requirements review. FR15–FR24 are new; all requirements are defined in Chapter 3.
+> **Note on requirement numbers.** FR1–FR14 are the requirements agreed at the requirements review. FR15–FR26 are new; all requirements are defined in Chapter 3.
 
 ### 2.3 Special Usage Considerations
 
@@ -570,14 +586,14 @@ UC5 is a preparatory stage, not a goal on its own: the producer sets up rules in
 - **Reference files go to the LLM.** Reference files may be sent to the external LLM provider as context for the producer's requests. Co-Hendrix stores them only with the chat window they were uploaded to.
 - **One region, one request.** Each request may change exactly one region. Larger changes are made as a series of requests.
 - **Results are not repeatable.** The LLM may return a different patch for the same request. What is guaranteed is that any result shown as valid passes every check, not that it is the same each time. Run records store the LLM's outputs, so a past request can be reviewed later without calling the LLM again.
-- **Waiting for the LLM.** Each request depends on an external service and a network connection, and may take several seconds. Repairs add more LLM calls. If the LLM fails, the producer's file is never damaged.
+- **Waiting for the LLM.** Each request depends on an external service and a network connection, and may take several seconds. Repairs add more LLM calls. A request never takes more than 60 s: if it has not finished by then, Co-Hendrix abstains (NFR2). If the LLM fails, the producer's file is never damaged.
 - **Guarantees cover rules, not taste.** Co-Hendrix guarantees that confirmed rules hold and protected notes are unchanged. Whether the result sounds good is for the producer to judge.
 
 ---
 
 ## Chapter 3 — Functional Requirements
 
-This chapter lists the capabilities Co-Hendrix must provide, written so that the customer can read them and each one can be tested. Requirements are grouped into seven functional areas (Figure 4). Each requirement has a stable identifier: FR1–FR14 were agreed at the requirements review and keep their numbers and wording; FR15–FR24 are new in this document. Section 3.8 lists possible upgrades (tagged EXT) that we do not commit to.
+This chapter lists the capabilities Co-Hendrix must provide, written so that the customer can read them and each one can be tested. Requirements are grouped into seven functional areas (Figure 4). Each requirement has a stable identifier: FR1–FR14 were agreed at the requirements review and keep their numbers and, apart from a shortened FR9, their wording; FR15–FR26 are new in this document. Section 3.8 lists possible upgrades (tagged EXT) that we do not commit to.
 
 *Figure 4 — Functional areas*
 
@@ -591,13 +607,13 @@ flowchart TB
     S --> E["3.5 Review and export"]
     S --> F["3.6 Run record"]
     S --> G["3.7 Chat windows and models"]
-    A --- A1["FR1, FR7"]
+    A --- A1["FR1, FR7, FR25"]
     B --- B1["FR8–FR11, FR14–FR16"]
     C --- C1["FR2, FR3"]
     D --- D1["FR4, FR12, FR13, FR17"]
     E --- E1["FR5, FR6, FR19–FR21"]
     F --- F1["FR18"]
-    G --- G1["FR22–FR24"]
+    G --- G1["FR22–FR24, FR26"]
 ```
 
 In the tables below, *Source* says where a requirement comes from: **Review** — agreed at the 10 Nov 2026 requirements review; **New** — added in this document.
@@ -608,17 +624,20 @@ In the tables below, *Source* says where a requirement comes from: **Review** �
 | --- | --- | --- | --- |
 | FR1 | The system shall accept a MIDI sketch written by the producer. | UC1–UC4 | Review |
 | FR7 | The system shall not accept raw audio as input. | UC1–UC4 | Review |
+| FR25 | The system shall reject a file that is not a valid standard MIDI file, and a locked region larger than 16 bars × 4 tracks, and shall tell the producer why. | UC1–UC6 | New |
 
-The sketch is a standard multi-track `.mid` file exported from the producer's DAW (see 1.6.2).
+The sketch is a standard multi-track `.mid` file exported from the producer's DAW (see 1.6.2). FR25 applies to sketches and reference files alike. The sketch itself may be any length; the limit of 16 bars × 4 tracks (NFR4) applies to the region one request may change, and larger changes are made as a series of requests (2.3).
+
+Supported files (FR25): MIDI files of type 0 and type 1 are accepted; a type 0 file is split into tracks by MIDI channel. A sketch may use any time signature (for example 4/4, 3/4 or 6/8), but only one: bars are counted in that time signature, and a sketch whose time signature changes is rejected with the reason. Tempo changes are allowed; they do not affect where bars fall, and a patch never changes them (3.4).
 
 ### 3.2 Rules
 
-Rules are the constraints that every constrained patch must satisfy. They come from two sources — constraints the producer states in words, and style rules suggested from reference files — and in both cases they apply only after the producer confirms them.
+Rules are the constraints that every constrained patch must satisfy. They come from two sources — constraints the producer states in words, and style rules suggested from the sketch — and in both cases they apply only after the producer confirms them.
 
 | ID | Requirement | Use cases | Source |
 | --- | --- | --- | --- |
 | FR8 | When no style rules have been confirmed, the system shall not enforce extracted key, range, or rhythm-grid rules. | UC1, UC3 | Review |
-| FR9 | The system shall accept between 1 and 10 reference MIDI files. | UC2, UC4, UC5 | Review |
+| FR9 | The system shall accept between 1 and 10 reference MIDI files. | UC2, UC4, UC5 | Review (shortened) |
 | FR10 | The system shall extract key, pitch range, and rhythm grid from the provided MIDI and suggest them as style rules. | UC2, UC4, UC5 | Review |
 | FR11 | The system shall activate a style rule only after the producer explicitly confirms it. | UC2, UC4, UC5 | Review |
 | FR14 | The system shall allow an optional manually entered chord progression; it shall not extract chords automatically. | UC2, UC4, UC5 | Review |
@@ -627,9 +646,17 @@ Rules are the constraints that every constrained patch must satisfy. They come f
 
 Notes:
 
-- Reference files are optional: a producer may confirm rules from stated constraints only (UC5, alternative flow 1.b). FR9 sets the limit when reference files are used.
+- In FR10, "the provided MIDI" is the producer's sketch. For the key: when the tracks of the sketch agree on a common key, the system suggests that one key; when they do not, it suggests its 3 most likely keys, ranked, and the producer picks one. In both cases the producer may enter a different key instead (R4).
+- Reference files are optional and are not a source of rules: they are sent to the LLM as style context (UC5, alternative flow 1.b). FR9 sets the limit when reference files are used.
+- Scope of rules: a key rule and a rhythm-grid rule apply to the whole sketch; a pitch-range rule applies to one track. From the sketch (FR10), the system suggests one key, one rhythm grid, and one pitch range for each track that has notes (that track's lowest to highest note). A stated constraint that names a track ("keep the bass below C3") becomes a rule for that track only; one that names no track applies to the whole sketch.
+- Drum tracks: on a drum track a note number stands for an instrument (for example kick or snare), not a pitch. Tracks on MIDI channel 10 (the General MIDI drum channel) are marked as drum tracks automatically, and the producer may mark or unmark any track as a drum track (UC5, step 2). Key and pitch-range rules do not apply to drum tracks, drum tracks are left out of key suggestion, and no range is suggested for them. The rhythm-grid rule applies to drum tracks as to any other track.
+- Chord progression (FR14): when the producer enters one, it is stored with the chat window and sent to the LLM in the prompt of every request, as guidance so that new notes fit the harmony. It is not checked and is not part of the guarantee; checking notes against it is a possible upgrade (EXT2).
+- Rhythm grid: a note is on the grid when it starts within ± 1/8 of the grid step of a grid line (for example, within ± 1/128 of a bar on a 1/16 grid). The tolerance is fixed and scales with the step, so it does not depend on tempo or the file's resolution.
+- When the producer generates a part on a track that has no notes yet, the sketch gives no pitch range for that track; a range rule for it can come only from a stated constraint (FR15). Key and rhythm grid can still be suggested from the rest of the sketch.
 - The rule types the system can check in this version are key, pitch range and rhythm grid, plus the locked region itself (FR2–FR4). A stated constraint such as "keep the bass below C3" becomes a pitch-range rule; "stay in D minor" becomes a key rule. A constraint of any other type, such as "max 4 notes per bar", falls under FR16 unless a possible upgrade adds that rule type (EXT1, section 3.8).
 - FR11 applies to every rule, whatever its source: a rule from FR15 is active only after the producer confirms it.
+- FR8 applies to every rule, whatever its source: with no confirmed rules, only the locked region is checked.
+- The translation in FR15 uses the LLM. Its output must be a rule of one of the checkable types with a value; the system checks this in code, and anything else falls under FR16. Because a translated rule is active only after the producer confirms it, using the LLM here does not weaken the guarantee: checking rules, and suggesting rules from the sketch (FR10), remain deterministic code (see 4.2).
 
 ### 3.3 Region and request
 
@@ -647,12 +674,13 @@ A request is the producer's instruction in their own words. The region may conta
 | FR4 | The system shall leave all notes outside the locked region unchanged. | UC1–UC4 | Review |
 | FR12 | The system shall verify every constrained patch against the locked region and each confirmed rule (key, range, rhythm grid). | UC2, UC4 | Review |
 | FR13 | The system shall block any patch that fails a verification check, shall not apply it, and shall show the producer which rule failed. | UC1–UC4 | Review |
-| FR17 | When a patch fails a verification check, the system shall send the exact violations back to the LLM and request a corrected patch, up to 3 times per request. If the patch still fails after the third repair, or the LLM returns an error, the system shall abstain: it shall apply nothing, leave the file unchanged, and report the reason to the producer. | UC1–UC4 | New |
+| FR17 | When a patch fails a verification check, the system shall send the exact violations back to the LLM and request a corrected patch, up to 3 times per request. If the patch still fails after the third repair, the LLM returns an error, or the request reaches the 60-second time limit (NFR2), the system shall abstain: it shall apply nothing, leave the file unchanged, and report the reason to the producer. FR13 applies to the patch that remains after these repairs; a patch that is repaired successfully is not reported as blocked. | UC1–UC4 | New |
 
 Notes:
 
 - FR12 covers every confirmed rule, including rules created from stated constraints (FR15) once confirmed.
 - FR4 holds for every request, with or without rules: the locked-region check runs in UC1–UC4.
+- "In the region" (FR3, FR4, NFR6, NFR7): a note is in the region only if it is on a locked track and both starts and ends within the locked bars. A note that crosses either edge of the region is protected, even if part of it lies inside. Notes the patch adds or changes must fit entirely inside the region. Velocity is part of a note and may change only for notes in the region. A patch never changes any other event — controllers (CC), pitch bend, program changes or tempo.
 - Verification is done in the system's own code, not by the LLM.
 
 ### 3.5 Review and export
@@ -673,7 +701,7 @@ Note on FR20: rules are checked when a patch is verified (FR12, FR13), so a patc
 | --- | --- | --- | --- |
 | FR18 | The system shall keep a run record for every request: the request, the locked region, the active rules, the LLM model used, each patch returned by the LLM, the result of each check, and the final outcome (accepted, rejected or blocked). | UC1–UC4 | New |
 
-The run record makes every result explainable. Because it stores the LLM's outputs, the system's own processing of a past request can be re-run on them without calling the LLM again (see NFR9).
+Each run record also stores the version of the sketch the request ran on, so that a run can be replayed after the sketch is replaced (FR26, NFR9). The run records of a chat window are its history: the producer sees them in the window as a list of past requests, each with what was asked, the outcome (accepted, rejected or blocked) and which rules failed, if any. Deleting a window deletes its run records (UC6, NFR11). The run record makes every result explainable. Because it stores the LLM's outputs, the system's own processing of a past request can be re-run on them without calling the LLM again (see NFR9).
 
 ### 3.7 Chat windows and models
 
@@ -681,11 +709,12 @@ The run record makes every result explainable. Because it stores the LLM's outpu
 | --- | --- | --- | --- |
 | FR22 | The system shall let the producer open several chat windows, each holding one MIDI sketch with its own reference files, confirmed rules, LLM model and request history, and switch between them. Nothing done in one window shall change another. | UC6 | New |
 | FR23 | The system shall save each chat window, with its sketch, reference files, rules, model and history, until the producer deletes it. | UC6 | New |
-| FR24 | The system shall let the producer choose, for each chat window, the LLM model to use from a list of supported models. | UC6 | New |
+| FR24 | The system shall let the producer choose, for each chat window, the LLM model to use from a list of supported models, and change it at any time when no request is running in that window. The new model is used from the next request; past run records keep the model they used. | UC6 | New |
+| FR26 | The system shall let the producer replace the sketch in a chat window with a new version. The window shall keep its reference files, confirmed rules, chord progression, model and history; a patch still waiting for the producer's decision is discarded. | UC6 | New |
 
 ### 3.8 Possible Upgrades
 
-The requirements FR1–FR24 above define the system we commit to. The course guidelines also ask us to suggest additional or more general functionality. The requirements below, tagged **EXT**, are possible upgrades that may follow once the committed requirements are in place. Which of them, if any, enter version 1.0 or a later version will be decided with the customer after this document is accepted.
+The requirements FR1–FR26 above define the system we commit to. The course guidelines also ask us to suggest additional or more general functionality. The requirements below, tagged **EXT**, are possible upgrades that may follow once the committed requirements are in place. Which of them, if any, enter version 1.0 or a later version will be decided with the customer after this document is accepted.
 
 | ID | Requirement (possible upgrade) | Why it could help |
 | --- | --- | --- |
@@ -696,18 +725,18 @@ The requirements FR1–FR24 above define the system we commit to. The course gui
 
 ### 3.9 Traceability
 
-Table 4 maps each use case to the requirements it covers. Every requirement FR1–FR24 is covered by at least one use case.
+Table 4 maps each use case to the requirements it covers. Every requirement FR1–FR26 is covered by at least one use case.
 
 *Table 4 — Requirements covered by each use case*
 
 | Use case | Requirements |
 | --- | --- |
-| UC1 · Edit, no confirmed rules | FR1–FR8, FR13, FR17–FR21 |
-| UC2 · Edit, with confirmed rules | FR1–FR7, FR9–FR13, FR15, FR17–FR21 |
-| UC3 · Generate, no confirmed rules | FR1–FR8, FR13, FR17–FR21 |
-| UC4 · Generate, with confirmed rules | FR1–FR7, FR9–FR13, FR15, FR17–FR21 |
-| UC5 · Set up and confirm rules | FR9–FR11, FR14–FR16 |
-| UC6 · Manage chat windows | FR1, FR22–FR24 |
+| UC1 · Edit, no confirmed rules | FR1–FR8, FR13, FR17–FR21, FR25 |
+| UC2 · Edit, with confirmed rules | FR1–FR7, FR9–FR13, FR15, FR17–FR21, FR25 |
+| UC3 · Generate, no confirmed rules | FR1–FR8, FR13, FR17–FR21, FR25 |
+| UC4 · Generate, with confirmed rules | FR1–FR7, FR9–FR13, FR15, FR17–FR21, FR25 |
+| UC5 · Set up and confirm rules | FR9–FR11, FR14–FR16, FR25 |
+| UC6 · Manage chat windows | FR1, FR22–FR26 |
 
 ---
 
@@ -723,9 +752,9 @@ Some targets cannot be set honestly before we have measured a first version. Fol
 
 | ID | Requirement | Target | How we test it | Source |
 | --- | --- | --- | --- | --- |
-| NFR1 | Time spent in our own code, from receiving the LLM's output to a verified result, for an 8-bar request | p95 < 2 s | Timings stored in each run record | Review |
-| NFR2 | End-to-end time of a request, from submission to result, for an 8-bar request | < 60 s | Timings stored in each run record | Review |
-| NFR3 | Import of reference MIDI files and rule suggestion | 1–10 files in ≤ 5 min | Import test with 10 reference files | Review |
+| NFR1 | Time spent in our own code, from receiving the LLM's output to a verified result, for any request up to 16 bars × 4 tracks | p95 < 2 s | Timings stored in each run record | Review |
+| NFR2 | **Time limit.** Every request ends within 60 s of submission, with a verified result or an abstain. If no patch has passed every check by then, the system stops, applies nothing and tells the producer the time limit was reached (FR17). | 100% of requests ≤ 60 s | Timings stored in each run record; fault-injection mocks with a slow LLM | Review (made a hard limit) |
+| NFR3 | Import of reference MIDI files, and rule suggestion from the sketch | 1–10 reference files imported, and rules suggested, in ≤ 5 min | Import test with a sketch and 10 reference files | Review (rule suggestion from the sketch: New) |
 | NFR4 | Size of one request | Up to 16 bars × 4 tracks | Tests with 8- and 16-bar, 4-track sketches | Proposal |
 | NFR5 | LLM calls per request (1 initial patch + up to 3 repairs) | ≤ 4 | Counted in each run record; fault-injection mocks | Review |
 
@@ -743,7 +772,7 @@ NFR1 separates our own processing time from the LLM's time, because only our own
 
 Note on NFR6: the review printed this row as "Protected notes untouched; violations block export". It is reworded to match FR20 — export is never blocked; instead, a patch that breaks a rule never reaches the sketch. The target and the test are unchanged.
 
-Note on NFR7: the review printed "100% of mutants, ≥ 99% of fixtures". The fixture target is raised to 100% so that the guarantee "confirmed rules hold" is as strong as "protected bars stay untouched". This is possible because each rule is defined precisely (a key is a set of allowed pitch classes, a range is a lowest and highest note, a grid is a step size with a fixed tolerance), so every check is an exact computation, like the locked-region check.
+Note on NFR7: the review printed "100% of mutants, ≥ 99% of fixtures". The fixture target is raised to 100% so that the guarantee "confirmed rules hold" is as strong as "protected bars stay untouched". This is possible because each rule is defined precisely (a key is a set of allowed pitch classes, a range is a lowest and highest note for one track, a grid is a step size with a fixed tolerance of ± 1/8 of the step), so every check is an exact computation, like the locked-region check.
 
 NFR6 and NFR7 test different things. NFR6 is the outcome for the producer: nothing that breaks the region or a rule is ever applied. NFR7 tests the checks themselves, in two complementary ways:
 
@@ -758,12 +787,13 @@ NFR9 does not ask the LLM to repeat itself — the LLM may answer the same promp
 
 | ID | Requirement | Target | How we test it | Source |
 | --- | --- | --- | --- | --- |
-| NFR11 | **Privacy.** The producer's sketches and reference files are sent only to the LLM provider selected for the chat window, are stored only with that window on the Co-Hendrix server, and are deleted when the window is deleted. | No other destinations; nothing left after deletion | Test of outgoing requests; deletion test | Review (changed, see note) |
+| NFR11 | **Privacy.** The producer's sketches and reference files are sent only to the LLM provider selected for the chat window, are stored only with that window on the Co-Hendrix server, and are deleted, together with the window's run records, when the window is deleted. | No other destinations; nothing left after deletion | Test of outgoing requests; deletion test | Review (changed, see note) |
 | NFR12 | **Credentials.** The LLM provider's API key is kept on the server side and is never sent to the producer's browser or written to a run record. | 0 occurrences | Test that inspects responses to the browser and stored run records | New |
+| NFR17 | **Access.** Each producer has their own Co-Hendrix deployment, reached through a private link; a deployment answers only requests that carry its access key. | 100% of requests without the key refused | Test that sends requests without a key, and with another deployment's key | New |
 
 Note on NFR11: the review stated that reference songs are never stored or sent to the LLM as notes. This document changes that: reference songs may be sent to the LLM as context, and are stored with their chat window (see 1.2).
 
-There are no user accounts, roles or multi-user features in this version (see 1.4), so there are no access levels to enforce. One producer works with their own saved chat windows.
+There are no user accounts, roles or multi-user features in this version (see 1.4), so there are no access levels to enforce. Instead, the team hosts a separate deployment for each producer — in this version, the customer — so everyone who can open a deployment is the same producer, working with their own saved chat windows (NFR17). NFR17 is numbered after NFR16 because it was added later; it belongs with the other safety and security requirements.
 
 #### 4.1.4 Portability and interoperability
 
@@ -789,7 +819,8 @@ Usability targets are *TBD (Sprint 5)*. The customer will judge usability by the
 Co-Hendrix depends on an external LLM provider and on a network connection, and this project does not commit to an uptime figure. The requirement is about how the system behaves when the LLM is not available:
 
 - requests that need the LLM end in abstain, with the reason shown, and the producer's file is unchanged (NFR8);
-- importing a sketch, setting up and confirming rules, and exporting do not use the LLM and remain available.
+- importing a sketch, suggesting rules from the sketch, confirming rules, and exporting do not use the LLM and remain available;
+- translating constraints stated in words into rules (FR15) uses the LLM and is not available; the producer is told so (UC5, alternative flow 3.b).
 
 #### 4.1.7 Cost
 
@@ -803,14 +834,14 @@ Musical quality, originality and fit to the producer's taste are measured, never
 | --- | --- | --- |
 | Delivery rate | Requests that end with a verified patch ÷ all requests; abstaining counts as a failure | ≥ 70% |
 | Value of repairs | Rule compliance after repairs vs. the LLM's first attempt | ≥ +20 percentage points |
-| Key suggestion | The key the producer confirms is among the system's top 3 suggestions | ≥ 90% |
+| Key suggestion | The key the producer confirms is the suggested key, or, when no common key was found, among the 3 suggestions | ≥ 90% |
 
 ### 4.2 Platform constraints
 
 The customer has not imposed a platform. The constraints below come from the requirements themselves:
 
 - Generation must use an external cloud LLM through its API (1.2). The model is not hosted or trained by us.
-- Verification and rule suggestion must not use the LLM or any other AI: they are deterministic code, so that their results can be tested exactly (FR12, NFR7, NFR9).
+- Verification and rule suggestion from the sketch must not use the LLM or any other AI: they are deterministic code, so that their results can be tested exactly (FR10, FR12, NFR7, NFR9). The one use of the LLM outside generating patches is translating constraints stated in words into proposed rules (FR15); such a rule is checked in code to be well-formed and is active only after the producer confirms it (FR11).
 - Co-Hendrix must not be a DAW plugin and must not depend on any DAW's API (1.6.2).
 
 Proposal v2 planned the following technologies. They are planning choices, not customer constraints; the final choice belongs in the design document (ADD):
@@ -831,7 +862,7 @@ Proposal v2 planned the following technologies. They are planning choices, not c
 - **LLM cost.** Real-LLM runs cost money. The provider and who pays are still open (see 4.1.7).
 - **Final demonstration.** The demo will run live on a real LLM with real files:
   1. Import a 4-track sketch exported from a DAW.
-  2. Attach reference files and confirm the suggested rules; add one stated constraint in words. Open a second chat window with another sketch to show that windows are independent.
+  2. Confirm the rules suggested from the sketch, attach reference files as style context, and add one stated constraint in words. Open a second chat window with another sketch to show that windows are independent.
   3. Lock a region and make a request that leads the LLM to break a rule (for example the key).
   4. Show the violation being reported to the LLM and repaired, then the verified result, with the locked bars unchanged.
   5. Accept the patch, export the `.mid` file, and open it in a DAW.
@@ -843,11 +874,14 @@ Proposal v2 planned the following technologies. They are planning choices, not c
 
 - the producer's DAW can export and import standard MIDI files;
 - a network connection and at least one LLM provider are available;
-- sketches are short ideas of about 8–16 bars, edited one region at a time.
+- sketches are short ideas of about 8–16 bars, edited one region at a time;
+- each producer has their own deployment, hosted by the team (NFR17).
 
 **Limitations by design.** In this version Co-Hendrix:
 
 - does not accept raw audio and does not extract chords automatically (FR7, FR14);
+- does not accept a sketch whose time signature changes within the sketch (3.1);
+- cannot undo an accepted patch; the producer can undo it in their DAW, or upload an earlier version of the sketch (FR26). Undo is a possible upgrade (EXT3);
 - does not provide a note editor and is not a DAW plugin (FR6);
 - has no administrator roles and no multi-user features;
 - does not claim to learn the producer's taste, and does not guarantee musical quality;
@@ -871,13 +905,13 @@ Each risk has a probability (P) and an impact (I) — H high, M medium, L low �
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | R1 | LLM patches fail the constraints too often to be useful | H / H | Sprint 5 baseline (raw LLM, no repairs) | Up to 3 structured repairs with the exact violations (FR17); context in the prompt | Template composer (bass roots, arpeggios, drum patterns) behind the same patch format, still verified | TBD | Review |
 | R2 | Competing AI MIDI tools (for example Suno Studio) add rule checking or protected regions, narrowing what sets Co-Hendrix apart | M / H | Hands-on tests, Sprints 1–2; their releases, every milestone | Build our edge where they are weakest today: verification in code, protected bars, run records | Re-focus with the customer on the features that still set Co-Hendrix apart | TBD | Review (reworded) |
-| R3 | Verbal constraints are translated into the wrong rule | L / H | Sprint 5, on a set of test phrases | Every rule is shown back in plain terms and is active only after confirmation (FR11, FR15) | The producer picks the rule type and value from a short form instead of words | TBD | New |
-| R4 | Key suggestion is wrong on short or sparse MIDI | M / M | Sprint 5, labelled fixtures | Show the top 3 key guesses; the producer picks or enters the key | Manual entry only | TBD | Proposal |
+| R3 | Verbal constraints are translated into the wrong rule | L / H | Early check in Sprint 5: the raw LLM translates a set of test phrases, scored against the expected rules, as part of the Sprint 5 baseline; full check when the feature is built (M4) | Every rule is shown back in plain terms and is active only after confirmation (FR11, FR15) | The producer picks the rule type and value from a short form instead of words | TBD | New |
+| R4 | Key suggestion is wrong on short or sparse MIDI | M / M | Sprint 5, labelled fixtures | When the tracks share no common key, show the top 3 key guesses; the producer picks one or enters the key | Manual entry only | TBD | Proposal |
 | R5 | Latency or LLM cost per request is too high | M / M | Sprint 5 baseline | At most 4 LLM calls per request (NFR5); only the context the request needs; budget caps | Default to a faster or cheaper supported model (FR24) | TBD | Proposal |
-| R6 | Modules fail to integrate | M / H | Thin slice, Sprint 3 (the Alpha) | Frozen Score and Patch schemas; contract tests in CI | An integration-only sprint | TBD | Review |
+| R6 | Modules fail to integrate | M / H | Thin slice, Sprint 4 (the Alpha, week 7) | Frozen Score and Patch schemas; contract tests in CI | An integration-only sprint | TBD | Review |
 | R7 | The rule types we can check are too narrow to matter to producers | M / M | Customer review, Sprints 1–2 | Start with the rules the customer ranks highest; rule types designed to be added (EXT1) | Add the customer's top missing rule type before other features | TBD | Proposal |
 
-R1, R2 and R6 are the three risks on the requirements-review deck; R2 is reworded. The other four are added here.
+R1, R2 and R6 are the three risks on the requirements-review deck; R2 is reworded. For R6 the deck printed "Sprint 3"; with two-week sprints, the week-7 Alpha falls at the end of Sprint 4, so this document uses Sprint 4. The Alpha is built over Sprints 3–4 (Table 7). The other four are added here.
 
 The most serious risks are R1 (technical: whether the LLM can produce valid patches at all) and R6 (integration: whether the modules work together). The proof of concept below is aimed at R6 directly and at R1 in part.
 
@@ -888,11 +922,13 @@ The most serious risks are R1 (technical: whether the LLM can produce valid patc
 **Flow.**
 
 1. Import a `.mid` file with 4 tracks.
-2. Profile it: key and tempo.
+2. Profile it: key.
 3. Protect bars and ask for an edit.
 4. The LLM returns a patch.
 5. Check the protected bars (constraint C1).
 6. Show the difference and export a `.mid` file.
+
+The Alpha verifies only C1. Other rules, such as the key found in step 2, may be sent to the LLM in the prompt to guide the edit, but they are not checked: the key, range and grid checks (C2–C4) come in M3. The deck's Alpha slide also listed tempo in step 2; the team dropped it from the Alpha.
 
 If C1 fails, the system abstains and shows the violation. There is no repair loop yet: a patch that touches a protected bar is blocked, and showing that is part of the demo.
 
@@ -939,10 +975,109 @@ Proposal v2 planned the rest of the year in two-week sprints. The milestones bel
 | Milestone | When | Content | Risks checked |
 | --- | --- | --- | --- |
 | M1 — Contracts and validation | Nov · Sprints 1–2 | Customer interviews; hands-on competitor tests; Score, Patch and Rule schemas frozen | R2, R7 |
-| M2 — Thin slice (the Alpha) | Dec · Sprints 3–4 | One rule, one region edit, change view, end to end; CI and mocks | R6 |
-| M3 — Verifier and rule suggestion | Jan · Sprints 5–6 | Key, range and grid checks; rule suggestion from references; raw-LLM baseline, after which the TBD targets are set | R1, R3, R4, R5 |
+| M2 — Thin slice (the Alpha) | Dec · Sprints 3–4 | One constraint (protected bars, C1), one region edit, change view, end to end; CI and mocks | R6 |
+| M3 — Verifier and rule suggestion | Jan · Sprints 5–6 | Key, range and grid checks; rule suggestion from the sketch; raw-LLM baseline, after which the TBD targets are set; early check of translating test phrases into rules | R1, R3 (early check), R4, R5 |
 | M4 — Repair loop and fallback | Feb · Sprints 7–8 | Repair loop; template composer; verbal constraints | R1, R3 |
 | M5 — Version 1.0 gate | Mar · Sprints 9–10 | Full interface, chat windows, model choice, run records; acceptance demo with the customer | — |
 | M6 — Evaluation and hardening | Apr–May · Sprints 11–14 | Measured-quality suite, blind comparison with the customer, possible upgrades if time allows | — |
 
 Final delivery is in June 2027.
+
+---
+
+## Chapter 6 — Appendices
+
+### Appendix A — Input and output formats
+
+This appendix collects the formats Co-Hendrix reads and writes, as defined in Chapters 1–4. It describes them from the producer's point of view; the exact data schemas (Score, Patch, Rule) are frozen in M1 and belong in the design document (ADD).
+
+*Table 8 — Inputs*
+
+| Input | Format | Limits and rules | Where defined |
+| --- | --- | --- | --- |
+| MIDI sketch | Standard MIDI File (`.mid`), type 0 or type 1; a type 0 file is split into tracks by MIDI channel | Any length; one time signature for the whole sketch (a change is rejected); tempo changes allowed; tracks on channel 10 are marked as drum tracks | FR1, FR25, 3.1 |
+| New version of the sketch | Same as the sketch | Replaces the sketch in its chat window | FR26 |
+| Reference files (optional) | Standard MIDI Files (`.mid`) | 1–10 per chat window; style context for the LLM only, never a source of rules | FR9, FR25 |
+| Locked region | Tracks and bars of the sketch | One region per request; at most 16 bars × 4 tracks | FR2, FR25, NFR4 |
+| Request | Free text in English | One per region | 3.3, NFR16 |
+| Stated constraint | Free text in English | Translated by the LLM into a proposed rule, or kept as guidance only | FR15, FR16 |
+| Chord progression (optional) | Entered by hand | Guidance for the LLM; not checked | FR14 |
+| Decisions | Confirm, edit or reject a rule; accept or reject a patch; mark or unmark a drum track | — | FR5, FR11, 3.2 |
+
+*Table 9 — Rule types the system can check*
+
+| Rule type | Value | Applies to | Suggested from the sketch | Check |
+| --- | --- | --- | --- | --- |
+| Locked region | Tracks and bars | The request | No (set by the producer) | A note is in the region only if it is on a locked track and starts and ends inside the locked bars. Nothing outside the region may change, and a patch changes only notes (including velocity), never other events (3.4). |
+| Key | A set of allowed pitch classes | The whole sketch, except drum tracks | One key when the tracks agree on a common key, otherwise the 3 most likely, ranked | Every note in the patch belongs to the key. |
+| Pitch range | A lowest and highest note | One track (not drum tracks) | The track's lowest to highest note; none for an empty track | Every note in the patch on that track lies within the range. |
+| Rhythm grid | A step size, with a fixed tolerance of ± 1/8 of the step | The whole sketch, including drum tracks | Yes | Every note in the patch starts within the tolerance of a grid line. |
+
+*Table 10 — Outputs*
+
+| Output | Format | Where defined |
+| --- | --- | --- |
+| Suggested rules | Shown in the chat window, in plain terms, for confirmation | FR10, FR15 |
+| Result view | The notes the patch adds, removes and changes in the region, the result of every check, and playback in the context of the sketch | FR19, FR21 |
+| Failure report | Which rule failed, or that the LLM failed or the time limit was reached; the file is unchanged | FR13, FR17, NFR2 |
+| Exported sketch | Standard MIDI File (`.mid`) that opens in a DAW | FR20, NFR10, NFR15 |
+| Run record | Per request: the request, locked region, active rules, LLM model, sketch version, each patch the LLM returned, the result of each check, timings and the final outcome; shown to the producer as the window's history | FR18, 3.6 |
+
+### Appendix B — Similar products
+
+Table 1 (1.1) lists the AI MIDI tools closest to Co-Hendrix. This appendix compares them on the properties Co-Hendrix is built around. It is based on the tools' public documentation as of November 2026. Hands-on testing is planned for Sprint 1 (M1), and this appendix will be updated with its results.
+
+*Table 11 — Comparison with similar products*
+
+| Property | Suno Studio 2.0 | MIDI Agent | Staccato | Logic Session Players | Co-Hendrix |
+| --- | --- | --- | --- | --- | --- |
+| What it does | AI chat edits MIDI in its own web DAW | LLM text-to-MIDI plugin; uses example files for style | Continues your MIDI; claims to learn your style | Bass and keys follow the chord track | Generates and edits one locked region of your MIDI sketch through an LLM |
+| Where it works | In its own web DAW | As a plugin | Not established | Logic only | Any DAW, through standard `.mid` files |
+| Text prompts | Yes | Yes | Not established | Not found | Yes |
+| Bar-scoped edits or protected bars | Not found | Not found | Not found | Not established | Yes (FR2–FR4) |
+| Declared rules | Not found | Not established | Not established | Follows the chord track | Yes, confirmed by the producer (FR10, FR11, FR15) |
+| Verification in code | Not found | Not found | Not found | Not established | Yes, for every patch (FR12, FR13) |
+
+"Not found" means the public documentation we read does not mention the property. "Not established" means Table 1 does not cover it; it will be checked in the Sprint 1 hands-on tests.
+
+### Appendix C — Background
+
+**MIDI.** MIDI is a symbolic description of music: each note has a pitch, a start time, a length and a velocity (how hard it is played). A Standard MIDI File stores these events in tracks. Type 1 files keep one track per instrument; type 0 files keep everything in one stream, separated by channel. By General MIDI convention, channel 10 carries drums, where a note number names an instrument (for example kick or snare) rather than a pitch. Time is counted in ticks per beat, and bars follow from the time signature. Besides notes, a file can carry other events, such as controllers, pitch bend, program changes and tempo.
+
+**Large language models.** An LLM generates text and can be asked to write MIDI in a structured form. It is probabilistic: the same prompt can give different answers, and it is not bound to follow every instruction. This is why Co-Hendrix never trusts its output, and why results are not repeatable (2.3).
+
+**Verification in code.** Co-Hendrix separates generation from verification. Each rule it can check has an exact definition (Table 9), so whether a patch satisfies it is a deterministic computation, not a judgement. This is what makes the guarantees possible — confirmed rules hold and protected bars stay untouched — and what lets the checks be tested to 100% (NFR6, NFR7) and replayed from run records (NFR9).
+
+**Repair and abstain.** When a patch fails a check, the exact violations are sent back to the LLM, which is asked for a corrected patch. This is repeated up to 3 times within the 60-second limit. If no patch passes, the system abstains: it applies nothing and reports why (FR17, NFR2).
+
+### Appendix D — Glossary
+
+*Table 12 — Glossary*
+
+| Term | Meaning |
+| --- | --- |
+| Abstain | End a request without applying anything, leaving the file unchanged, and tell the producer why (FR17). |
+| Alpha | The proof of concept due in week 7: one constraint (C1) through every module (5.2). |
+| C1–C4 | The Alpha's constraint numbers: C1 protected bars, C2 key, C3 range, C4 grid. |
+| Chat window | One sketch with its reference files, rules, chord progression, model and history; saved until deleted (FR22, FR23). |
+| Chord progression | Chords entered by hand; guidance for the LLM, not checked (FR14). |
+| Confirmed rule | A rule the producer has explicitly confirmed; only confirmed rules are enforced (FR11). |
+| DAW | Digital audio workstation, such as Ableton Live, FL Studio or Logic Pro. |
+| Deployment | A separate copy of Co-Hendrix hosted by the team for one producer, opened with a private link and access key (NFR17). |
+| Drum track | A track whose note numbers name drum instruments; key and range rules do not apply to it (3.2). |
+| EXT | A possible upgrade the team does not commit to (3.8). |
+| Fixture | A hand-written test case with a known correct verdict (4.1.2). |
+| In the region | On a locked track, and starting and ending inside the locked bars (3.4). |
+| LLM | Large language model; the external, untrusted generator of patches. |
+| Locked region | The tracks and bars a request may change; everything else is protected (FR2). |
+| Mutant | An automatically broken patch used to test that a check catches violations (4.1.2). |
+| Patch | A set of note additions, removals and changes for the locked region (1.5.3). |
+| Reference file | A `.mid` file of a song the producer likes, sent to the LLM as style context; not a source of rules (FR9). |
+| Repair | Sending the exact violations back to the LLM and asking for a corrected patch, up to 3 times (FR17). |
+| Rule | A constraint of a type the system can check: key, pitch range or rhythm grid (Table 9). |
+| Run record | The stored record of one request; together, a window's run records are its history (FR18). |
+| Sketch | The producer's multi-track MIDI file that Co-Hendrix edits. |
+| Stated constraint | A constraint the producer writes in their own words, translated into a proposed rule (FR15). |
+| Suggested rule | A rule Co-Hendrix extracts from the sketch for the producer to confirm (FR10). |
+| Time limit | The 60 seconds within which every request ends (NFR2). |
+| Verified | Passed every check in the system's own code. |
