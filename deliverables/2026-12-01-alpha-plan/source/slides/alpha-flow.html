@@ -1,0 +1,20 @@
+<section id="alpha-flow">
+<p class="eyebrow">THE ALPHA · ARD 5.2</p>
+<h2>One real file, one constraint, one real LLM, through every module</h2>
+<div class="steps">
+<div class="step"><p class="num">1</p><p class="small">Import a 4-track .mid file</p></div>
+<div class="step"><p class="num">2</p><p class="small">Profile it: show the key</p></div>
+<div class="step"><p class="num">3</p><p class="small">Lock a region and ask for an edit</p></div>
+<div class="step"><p class="num">4</p><p class="small">Gemini returns one patch</p></div>
+<div class="step check"><p class="num">5</p><p class="small">Check C1: protected bars unchanged, else abstain</p></div>
+<div class="step"><p class="num">6</p><p class="small">Show the diff and export .mid</p></div>
+</div>
+<h3 style="margin-top:56px">Done when</h3>
+<div class="row">
+<div class="card blue"><p class="small">Protected bars identical in 100% of mock-LLM runs in CI</p></div>
+<div class="card"><p class="small">The exported file opens in a DAW</p></div>
+<div class="card"><p class="small">One live run on Gemini succeeds</p></div>
+</div>
+<p class="note">Planned for week 7; working at the hackathon, 29 Dec 2026, after a first demo to the customer on 21 Dec.</p>
+<aside>This is the slice the whole team builds together. If the patch touches a protected bar, the system abstains and shows the violation; there is no repair loop yet, and showing a blocked patch is part of the demo. We chose C1 because protected bars are our central promise and the simplest to check exactly.</aside>
+</section>

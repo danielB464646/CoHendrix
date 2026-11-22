@@ -166,8 +166,10 @@ Most planning questions were answered on 23 Nov 2026; three are still open.
 | --- | --- |
 | Sprint calendar | Sprint 1 starts Mon 23 Nov 2026; two-week sprints |
 | What exists already | Nothing yet — Sprint 1 starts from an empty repository |
-| Development LLM | Gemini, with a total budget of $100 |
+| Development LLM | Gemini, with a total budget of $100 (ADR 0015) |
 | Tech stack | As listed in ARD 4.2 (ADR 0013, 22 Nov 2026) |
+| Working method | Method C: walking skeleton, then feature ownership (ADR 0014) |
+| Phase 1 layers | Oren platform, Stav MIDI, Daniel verifier, Eden web client (ADR 0016) |
 | Customer demo | 21 Dec 2026, with DJ LIRANO |
 | Semester A | Last meeting with Avi on 12 Jan 2027; exam period 18 Jan – 28 Feb 2027 |
 

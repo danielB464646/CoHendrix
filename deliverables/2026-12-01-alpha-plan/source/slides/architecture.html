@@ -1,0 +1,17 @@
+<section id="architecture">
+<p class="eyebrow">HOW THE ALPHA IS BUILT · STACK FROM ARD 4.2 (ADR 0013)</p>
+<h2>One slice, one layer per member</h2>
+<div class="arch">
+<div class="box" style="width:300px"><h3>Web client</h3><p class="tech">React, TypeScript; Tone.js later for playback</p><p class="who">Eden</p></div>
+<x-shape kind="arrow-right" class="arrow"></x-shape>
+<div class="box" style="width:300px"><h3>API server</h3><p class="tech">Python, FastAPI, Pydantic; PostgreSQL for run records</p><p class="who">Oren</p></div>
+<x-shape kind="arrow-right" class="arrow"></x-shape>
+<div class="stack3">
+<div class="box"><h3>MIDI engine</h3><p class="tech">Score model, import and export: mido, pretty_midi, music21</p><p class="who">Stav</p></div>
+<div class="box"><h3>LLM gateway</h3><p class="tech">LiteLLM to Gemini; a mock LLM in CI</p><p class="who">Oren</p></div>
+<div class="box verifier"><h3>Verifier</h3><p class="tech">Patch and Rule schemas; the C1 check in code</p><p class="who">Daniel</p></div>
+</div>
+</div>
+<p class="note">Score, Patch and Rule schemas are frozen first and change only with all four members’ approval. CI on GitHub Actions; Docker for deployment.</p>
+<aside>Phase 1 split, decided on 22 Nov: Stav takes the MIDI engine; the other three layers were drawn at random. After the hackathon each member owns one functional area end to end and stewards the component closest to it.</aside>
+</section>
