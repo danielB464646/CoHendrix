@@ -8,15 +8,15 @@ Once the issues are opened, the GitHub board is the working list; this file stay
 
 ## Conventions
 
-**Members (phase 1 layers).** Owners are still to be decided, so issues are assigned by layer:
+**Members (phase 1 layers).** Assigned on 22 Nov 2026: Stav takes the MIDI layer; the other three layers were drawn at random among Oren, Daniel and Eden. Phase 2 area owners are still to be decided (before 4 Jan 2027).
 
-| Member | Layer in the walking skeleton | Shared component (phase 2) |
-| --- | --- | --- |
-| Member 1 | Platform: repo, API, database, LLM gateway, CI | API, database, LLM gateway, CI |
-| Member 2 | MIDI engine: Score model, import, export | MIDI engine |
-| Member 3 | Verifier: Patch and Rule schemas, contract tests, Gemini spike | Verifier |
-| Member 4 | Web client: upload screen, track × bar grid | Web client |
-| Team | Shared work: decisions, presentation, research | — |
+| Member | Who (GitHub) | Layer in the walking skeleton | Shared component (phase 2) |
+| --- | --- | --- | --- |
+| Member 1 | Oren Kashani (`orenkash5`) | Platform: repo, API, database, LLM gateway, CI | API, database, LLM gateway, CI |
+| Member 2 | Stav Ronen (GitHub login TBD; not yet a repository collaborator) | MIDI engine: Score model, import, export | MIDI engine |
+| Member 3 | Daniel Blanga (`danielB464646`) | Verifier: Patch and Rule schemas, contract tests, Gemini spike | Verifier |
+| Member 4 | Eden Sabika (`sabika19971`) | Web client: upload screen, track × bar grid | Web client |
+| Team | All four | Shared work: decisions, presentation, research | — |
 
 **Labels.**
 
