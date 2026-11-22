@@ -12,6 +12,7 @@ CoHendrix is the university software-engineering team repository. It is the know
 | [`CONTEXT.md`](CONTEXT.md) | Living one-page current state |
 | [`CHANGELOG.md`](CHANGELOG.md) | Append-only log of changes |
 | [`docs/requirements/`](docs/requirements/) | ARD and specifications (markdown source of truth) |
+| [`docs/planning/`](docs/planning/) | Development plan, sprint plans, handoff notes |
 | [`docs/architecture/`](docs/architecture/) | Diagrams and design notes |
 | [`docs/decisions/`](docs/decisions/) | ADRs: numbered files, one decision per file |
 | [`meetings/`](meetings/) | Summaries named `YYYY-MM-DD-topic.md` |

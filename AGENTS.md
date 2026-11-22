@@ -19,6 +19,7 @@ These rules apply to every contributor in this repository: Cursor, Claude, Grok,
 | Kind | Location | Naming |
 | --- | --- | --- |
 | Requirements and specs (ARD) | `docs/requirements/` | Markdown. This folder is the source of truth for requirements. |
+| Development plan, sprint plans, handoff notes | `docs/planning/` | Markdown. `development-plan.md` is the living plan; handoffs are named `YYYY-MM-DD-handoff.md`. |
 | Architecture diagrams and design notes | `docs/architecture/` | Markdown or image files next to the note that explains them |
 | Decisions | `docs/decisions/` | Numbered ADRs, one decision per file. Start from [`0000-template.md`](docs/decisions/0000-template.md). |
 | Meeting summaries | `meetings/` | `YYYY-MM-DD-topic.md` |
