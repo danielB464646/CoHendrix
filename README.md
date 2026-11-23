@@ -21,7 +21,54 @@ CoHendrix is the university software-engineering team repository. It is the know
 | [`comms/emails/`](comms/emails/) | Important emails, kept verbatim |
 | [`deliverables/`](deliverables/) | Non-code binaries in `YYYY-MM-DD-name/` folders |
 | [`tasks/backlog.md`](tasks/backlog.md) | Task backlog |
-| [`src/`](src/) | Application code (empty until implementation) |
-| [`tests/`](tests/) | Tests (empty until implementation) |
+| [`src/`](src/) | Application code: the server in `src/server/` |
+| [`tests/`](tests/) | Tests: `tests/server/` for the server |
 
 Read [`CONTEXT.md`](CONTEXT.md) and the latest [`CHANGELOG.md`](CHANGELOG.md) entry before changing anything. Follow [`AGENTS.md`](AGENTS.md) for where new material goes.
+
+## Run the server
+
+The server is Python 3.13, FastAPI and Pydantic, managed with [uv](https://docs.astral.sh/uv/). Code lives in `src/server/cohendrix/`, tests in `tests/server/`. Schema models go in `cohendrix/schemas/` (S1-07 to S1-09) and the verifier in `cohendrix/verifier/` (S1-25).
+
+First, once:
+
+```sh
+git clone https://github.com/danielB464646/CoHendrix.git && cd CoHendrix
+cp .env.example .env        # then set POSTGRES_PASSWORD; GEMINI_API_KEY can stay empty for now
+```
+
+### With Docker
+
+Needs Docker with Compose v2.
+
+```sh
+docker compose up --build
+curl http://localhost:8000/health   # {"status":"ok","version":"0.1.0"}
+```
+
+This starts the server on port 8000 and PostgreSQL 17 on port 5432. The database has no tables yet; they start with run records in Sprint 2. Stop with `Ctrl+C`; `docker compose down -v` also deletes the database volume.
+
+### Without Docker
+
+Install uv (`curl -LsSf https://astral.sh/uv/install.sh | sh`, or `pip install uv`). uv downloads Python 3.13 itself if you do not have it.
+
+```sh
+uv sync                                                  # creates .venv with pinned versions from uv.lock
+uv run uvicorn cohendrix.main:app --reload
+curl http://localhost:8000/health
+```
+
+The server does not use the database yet, so you do not need PostgreSQL to run it. API docs are at http://localhost:8000/docs.
+
+### Checks
+
+Each runs with one command from the repository root:
+
+| Check | Command |
+| --- | --- |
+| Tests | `uv run pytest` |
+| Lint | `uv run ruff check .` |
+| Format | `uv run ruff format .` (CI: `uv run ruff format --check .`) |
+| Types | `uv run mypy` |
+
+Add a dependency with `uv add <package>` (or `uv add --dev <package>` for tools) and commit both `pyproject.toml` and `uv.lock`.
