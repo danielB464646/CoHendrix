@@ -1,0 +1,135 @@
+# CI for every pull request and every push to main (S1-04, ARD 4.2.1).
+#
+# The job names below ("Server", "Client", "Docker images (server)",
+# "Docker images (client)") are the required status checks in the branch
+# protection rule for main. Renaming a job means updating that rule.
+#
+# CI never calls a real LLM: no LLM key is stored in GitHub secrets, and the
+# key is forced empty here. Tests use the mock LLM (S1-05).
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  GEMINI_API_KEY: ""
+
+jobs:
+  server:
+    name: Server
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.32"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Format
+        run: uv run ruff format --check .
+
+      - name: Types
+        run: uv run mypy
+
+      - name: Tests
+        run: uv run pytest
+
+  # Runs once the client exists (S1-24). Its package.json must define the
+  # scripts "lint", "typecheck" (tsc --noEmit) and "test", and the lock file
+  # is package-lock.json.
+  client:
+    name: Client
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: src/client
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check for the client
+        id: present
+        working-directory: .
+        run: |
+          if [ -f src/client/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::src/client/package.json not found; client checks skipped until S1-24 lands."
+          fi
+
+      - uses: actions/setup-node@v5
+        if: steps.present.outputs.present == 'true'
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: src/client/package-lock.json
+
+      - name: Install dependencies
+        if: steps.present.outputs.present == 'true'
+        run: npm ci
+
+      - name: Lint
+        if: steps.present.outputs.present == 'true'
+        run: npm run lint
+
+      - name: Types
+        if: steps.present.outputs.present == 'true'
+        run: npm run typecheck
+
+      - name: Tests
+        if: steps.present.outputs.present == 'true'
+        run: npm test
+
+  images:
+    name: Docker images (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [server, client]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Check for the Dockerfile
+        id: present
+        run: |
+          if [ -f "src/${{ matrix.service }}/Dockerfile" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::src/${{ matrix.service }}/Dockerfile not found; image build skipped."
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+        if: steps.present.outputs.present == 'true'
+
+      - name: Build
+        if: steps.present.outputs.present == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: src/${{ matrix.service }}/Dockerfile
+          push: false
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}

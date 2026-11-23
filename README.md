@@ -72,3 +72,18 @@ Each runs with one command from the repository root:
 | Types | `uv run mypy` |
 
 Add a dependency with `uv add <package>` (or `uv add --dev <package>` for tools) and commit both `pyproject.toml` and `uv.lock`.
+
+## CI and merging
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every pull request and on every push to `main`:
+
+| Check | What it runs |
+| --- | --- |
+| `Server` | `uv sync --locked`, ruff lint and format, mypy, pytest |
+| `Client` | `npm ci`, then `npm run lint`, `npm run typecheck`, `npm test` in `src/client/` (skipped until the client exists, S1-24) |
+| `Docker images (server)` | builds `src/server/Dockerfile` |
+| `Docker images (client)` | builds `src/client/Dockerfile` (skipped until it exists) |
+
+Each job stops after 10 minutes. uv, npm and Docker layers are cached. CI never calls a real LLM: no LLM key is stored in GitHub secrets, and tests use the mock LLM (S1-05).
+
+`main` is protected: changes go in through a pull request, all four checks must pass, and one person other than the author must approve.
