@@ -1,0 +1,14 @@
+<section id="challenges" class="alt">
+<p class="eyebrow">MAIN CHALLENGES</p>
+<h2>What is hard here, and how we cope</h2>
+<table>
+<tr><th style="width:38%">Challenge</th><th style="width:52%">How we cope</th><th style="width:10%">Risk</th></tr>
+<tr><td>The LLM replies in our patch format</td><td>Structured output, validated in code; a bad reply goes to repair or abstain</td><td>R1</td></tr>
+<tr><td>The LLM breaks the rules</td><td>Repair with the exact violations; verified template fallback</td><td>R1</td></tr>
+<tr><td>Real DAW files are messy</td><td>One normalised Score model; customer files tested in CI</td><td>R6</td></tr>
+<tr><td>Four developers, one pipeline</td><td>Walking skeleton first; frozen schemas; contract tests</td><td>R6</td></tr>
+<tr><td>60-second limit, up to 4 LLM calls</td><td>Timeout per call; small prompts; fast default model</td><td>R5</td></tr>
+</table>
+<p class="note">Also planned for: the exam period (Jan–Feb) at low capacity, and customer feedback before the hackathon (demo on 21 Dec).</p>
+<aside>The first two rows are the core technical risk R1; the Gemini spike in Sprint 1 gives us the first real numbers: parse rate, latency and cost per call. The full table, with when each challenge counts as handled, is in our development plan.</aside>
+</section>

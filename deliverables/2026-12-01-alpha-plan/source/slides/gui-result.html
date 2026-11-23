@@ -1,0 +1,25 @@
+<section id="gui-result" class="alt">
+<p class="eyebrow">INITIAL GUI · MOCK-UP, NOT YET BUILT</p>
+<h2>See the check and the change before anything is applied</h2>
+<div class="row">
+<div class="window" style="flex:1">
+<div class="win-bar"><p class="brand">Result</p><p>Bass, bars 9–12</p></div>
+<div style="padding:28px;display:flex;flex-direction:column;gap:20px">
+<p class="pill" style="align-self:flex-start">C1 protected bars: pass</p>
+<p class="small">Key D minor: sent to the LLM as guidance, not checked in the Alpha</p>
+<p style="font-size:32px;font-weight:600">+14 notes added · 6 removed · 2 changed</p>
+<div class="row" style="gap:16px"><p class="btn blue">Accept</p><p class="btn ghost">Reject</p><p class="btn ghost">Export .mid</p></div>
+</div>
+</div>
+<div class="window" style="flex:1">
+<div class="win-bar"><p class="brand">Blocked</p><p>Bass, bars 9–12</p></div>
+<div style="padding:28px;display:flex;flex-direction:column;gap:20px">
+<p class="pill orange" style="align-self:flex-start">C1 protected bars: fail</p>
+<p class="small">The patch changed 3 notes in bar 13, outside the locked region.</p>
+<p style="font-size:32px;font-weight:600">Nothing was applied. Your file is unchanged.</p>
+<p class="small muted">Every request, pass or fail, is saved in its run record.</p>
+</div>
+</div>
+</div>
+<aside>Left: a patch that passes C1. The producer sees added, removed and changed notes and accepts or rejects it as a whole, then exports. Right: the abstain case that the Alpha demo shows on purpose. The numbers here are illustrative.</aside>
+</section>
