@@ -1,0 +1,13 @@
+# Secrets: copy .env.example to .env and fill it in (NFR12)
+.env
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
