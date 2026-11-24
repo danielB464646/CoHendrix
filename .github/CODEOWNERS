@@ -1,0 +1,26 @@
+# Code owners. GitHub requests a review from the owners of the files a PR touches.
+# Owners are enforced only once branch protection requires code-owner review (S1-04, issue #7).
+# The last matching line wins. Use GitHub logins of repository collaborators only;
+# a line naming someone without access is ignored by GitHub.
+#
+# Phase 1 layer owners (ADR 0016):
+#   Platform  — Oren Kashani  (@orenkash5)
+#   MIDI      — Stav Ronen    (GitHub login TBD; add once Stav is a collaborator)
+#   Verifier  — Daniel Blanga (@danielB464646)
+#   Web       — Eden Sabika   (@sabika19971)
+# Phase 2 stewards replace these once area owners are decided (before 4 Jan 2027).
+
+# Repository settings, templates and CI: platform
+/.github/                 @orenkash5
+
+# Server and its tests (S1-03): platform
+/src/server/              @orenkash5
+/tests/server/            @orenkash5
+
+# Web client (S1-03, S1-15): web
+/src/client/              @sabika19971
+
+# Score, Patch and Rule schemas (S1-07 to S1-10): paths are decided when the schemas are written.
+# A schema change needs all four stewards (development plan). CODEOWNERS alone asks for one
+# owner's approval, so enforcing all four needs a check beyond this file (S1-10). Add the lines here, for example:
+# /src/server/<schema path>/    @orenkash5 <stav-login> @danielB464646 @sabika19971
