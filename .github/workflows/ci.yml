@@ -5,7 +5,7 @@
 # protection rule for main. Renaming a job means updating that rule.
 #
 # CI never calls a real LLM: no LLM key is stored in GitHub secrets, and the
-# key is forced empty here. Tests use the mock LLM (S1-05).
+# key is forced empty here. The gateway is forced to the mock LLM (S1-05).
 
 name: CI
 
@@ -23,6 +23,7 @@ concurrency:
 
 env:
   GEMINI_API_KEY: ""
+  LLM_PROVIDER: mock
 
 jobs:
   server:

@@ -60,6 +60,15 @@ curl http://localhost:8000/health
 
 The server does not use the database yet, so you do not need PostgreSQL to run it. API docs are at http://localhost:8000/docs.
 
+### The LLM
+
+Every LLM call goes through `cohendrix.llm`: build a gateway with `get_llm_gateway(get_settings())` and call `complete(messages, json_schema=..., timeout_s=...)`. It returns the raw reply text with tokens, latency and cost; it raises `LLMTimeoutError` or `LLMError`, and the caller abstains (FR17).
+
+`LLM_PROVIDER` in `.env` picks the implementation:
+
+- `mock` (the default, and always in tests and CI): plays recorded replies and costs nothing. Point `LLM_MOCK_REPLIES_DIR` at a folder of `*.json` files, played in file-name order, the last one repeating. A file is `{"text": "..."}`, `{"text": "...", "delay_s": 3}` for a slow reply, or `{"fault": "error"}` / `{"fault": "timeout"}`. In tests, build `MockLLMGateway([MockReply(...)])` directly; examples are in `tests/server/fixtures/llm/`.
+- `litellm`: calls `LLM_MODEL` (for example `gemini/gemini-2.5-flash`) with `GEMINI_API_KEY`. This spends the shared $100 budget (ADR 0015), so use it on purpose. Each call is logged with model, tokens, latency and cost.
+
 ### Checks
 
 Each runs with one command from the repository root:
