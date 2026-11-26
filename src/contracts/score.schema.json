@@ -1,0 +1,290 @@
+{
+  "$defs": {
+    "MidiEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "source_track": {
+          "minimum": 0,
+          "title": "Source Track",
+          "type": "integer"
+        },
+        "event_index": {
+          "minimum": 0,
+          "title": "Event Index",
+          "type": "integer"
+        },
+        "time": {
+          "$ref": "#/$defs/MusicalTime"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        },
+        "message_hex": {
+          "pattern": "^(?:[0-9a-f]{2})+$",
+          "title": "Message Hex",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_track",
+        "event_index",
+        "time",
+        "type",
+        "message_hex"
+      ],
+      "title": "MidiEvent",
+      "type": "object"
+    },
+    "MusicalTime": {
+      "additionalProperties": false,
+      "description": "Exact nonnegative position in MIDI quarter notes, independent of source PPQ.",
+      "properties": {
+        "numerator": {
+          "minimum": 0,
+          "title": "Numerator",
+          "type": "integer"
+        },
+        "denominator": {
+          "exclusiveMinimum": 0,
+          "title": "Denominator",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "numerator",
+        "denominator"
+      ],
+      "title": "MusicalTime",
+      "type": "object"
+    },
+    "Note": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "track_id": {
+          "title": "Track Id",
+          "type": "string"
+        },
+        "pitch": {
+          "maximum": 127,
+          "minimum": 0,
+          "title": "Pitch",
+          "type": "integer"
+        },
+        "velocity": {
+          "maximum": 127,
+          "minimum": 1,
+          "title": "Velocity",
+          "type": "integer"
+        },
+        "start": {
+          "$ref": "#/$defs/MusicalTime"
+        },
+        "end": {
+          "$ref": "#/$defs/MusicalTime"
+        },
+        "on_index": {
+          "minimum": 0,
+          "title": "On Index",
+          "type": "integer"
+        },
+        "off_index": {
+          "exclusiveMinimum": 0,
+          "title": "Off Index",
+          "type": "integer"
+        },
+        "release_velocity": {
+          "maximum": 127,
+          "minimum": 0,
+          "title": "Release Velocity",
+          "type": "integer"
+        },
+        "release_as_note_on": {
+          "title": "Release As Note On",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "track_id",
+        "pitch",
+        "velocity",
+        "start",
+        "end",
+        "on_index",
+        "off_index",
+        "release_velocity",
+        "release_as_note_on"
+      ],
+      "title": "Note",
+      "type": "object"
+    },
+    "TempoEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "source_track": {
+          "minimum": 0,
+          "title": "Source Track",
+          "type": "integer"
+        },
+        "event_index": {
+          "minimum": 0,
+          "title": "Event Index",
+          "type": "integer"
+        },
+        "time": {
+          "$ref": "#/$defs/MusicalTime"
+        },
+        "microseconds_per_quarter": {
+          "maximum": 16777215,
+          "minimum": 1,
+          "title": "Microseconds Per Quarter",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_track",
+        "event_index",
+        "time",
+        "microseconds_per_quarter"
+      ],
+      "title": "TempoEvent",
+      "type": "object"
+    },
+    "TimeSignature": {
+      "additionalProperties": false,
+      "properties": {
+        "numerator": {
+          "maximum": 255,
+          "minimum": 1,
+          "title": "Numerator",
+          "type": "integer"
+        },
+        "denominator": {
+          "exclusiveMinimum": 0,
+          "title": "Denominator",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "numerator",
+        "denominator"
+      ],
+      "title": "TimeSignature",
+      "type": "object"
+    },
+    "Track": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "source_track": {
+          "minimum": 0,
+          "title": "Source Track",
+          "type": "integer"
+        },
+        "channel": {
+          "maximum": 16,
+          "minimum": 1,
+          "title": "Channel",
+          "type": "integer"
+        },
+        "is_drum": {
+          "title": "Is Drum",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "source_track",
+        "channel",
+        "is_drum"
+      ],
+      "title": "Track",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The shared, provisional Score contract for an imported MIDI sketch.",
+  "properties": {
+    "midi_type": {
+      "enum": [
+        0,
+        1
+      ],
+      "title": "Midi Type",
+      "type": "integer"
+    },
+    "source_track_count": {
+      "minimum": 1,
+      "title": "Source Track Count",
+      "type": "integer"
+    },
+    "time_signature": {
+      "$ref": "#/$defs/TimeSignature"
+    },
+    "duration": {
+      "$ref": "#/$defs/MusicalTime"
+    },
+    "tracks": {
+      "items": {
+        "$ref": "#/$defs/Track"
+      },
+      "title": "Tracks",
+      "type": "array"
+    },
+    "notes": {
+      "items": {
+        "$ref": "#/$defs/Note"
+      },
+      "title": "Notes",
+      "type": "array"
+    },
+    "tempo_events": {
+      "items": {
+        "$ref": "#/$defs/TempoEvent"
+      },
+      "title": "Tempo Events",
+      "type": "array"
+    },
+    "midi_events": {
+      "items": {
+        "$ref": "#/$defs/MidiEvent"
+      },
+      "title": "Midi Events",
+      "type": "array"
+    },
+    "bar_count": {
+      "minimum": 1,
+      "title": "Bar Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "midi_type",
+    "source_track_count",
+    "time_signature",
+    "duration",
+    "tracks",
+    "notes",
+    "tempo_events",
+    "midi_events",
+    "bar_count"
+  ],
+  "title": "Score",
+  "type": "object"
+}
