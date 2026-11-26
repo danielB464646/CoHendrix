@@ -25,6 +25,10 @@ Code on `main` (24 Nov 2026; how to run and check it is in the README):
 
 Next for the platform layer: the upload endpoint (S1-06, #9) waits for the frozen Score schema (S1-07, #10) and MIDI import (S1-11, #14).
 
+On `feat/score-midi-import`, a provisional Score contract and type 0/1 MIDI
+import are implemented. The Score still needs agreement in #27 and approval
+from all four team members before it is frozen.
+
 - Review deck: [`deliverables/2026-11-10-requirements-review/`](deliverables/2026-11-10-requirements-review/) (`Co-Hendrix_Requirements_Review.pptx`, posted to Slack on 8 Nov 2026; cover date 10 Nov 2026).
 - Markdown extract (stakeholders, UC1–UC4, FR1–FR14, NFRs, risks, Alpha): [`docs/requirements/requirements-review.md`](docs/requirements/requirements-review.md).
 - Scope decisions since proposal v2: [`docs/decisions/0001-v1-scope-after-requirements-review.md`](docs/decisions/0001-v1-scope-after-requirements-review.md). Changes made while writing the ARD: ADRs 0002–0012 in [`docs/decisions/`](docs/decisions/) (0002–0004 supersede parts of ADR 0001).

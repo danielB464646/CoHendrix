@@ -60,6 +60,40 @@ curl http://localhost:8000/health
 
 The server does not use the database yet, so you do not need PostgreSQL to run it. API docs are at http://localhost:8000/docs.
 
+### Score and MIDI import
+
+The [Score contract](src/contracts/score.schema.json) is **provisional**, pending
+the team agreement in #27 and the four approvals required by #10.
+The [Python model](src/server/cohendrix/schemas/score.py) is the source of truth.
+To regenerate the schema and its [TypeScript types](src/contracts/score.ts):
+
+```sh
+uv run python scripts/export_score_schema.py
+npx --yes --package=json-schema-to-typescript@15.0.4 json2ts --cwd src/contracts -i src/contracts/score.schema.json -o src/contracts/score.ts
+```
+
+The [contract fixtures](tests/fixtures/contracts/) show drums and notes crossing
+bar lines. Positions are exact fractions of a MIDI quarter note from zero. Bars
+are counted from 1, with length `4 * meter numerator / meter denominator` in
+quarter notes. `bar_count` includes trailing silence from end-of-track events.
+Time signature defaults to 4/4; when no tempo event applies, MIDI's default
+tempo is 500,000 microseconds per quarter (120 BPM).
+
+Call `cohendrix.midi_import.import_midi(data: bytes)` to get a `Score`, or catch
+`MidiImportError` to report why an input was rejected. The importer reads SMF
+types 0 and 1 and separates channels within a source track (channel numbers are
+1-based). Channel 10 defaults to drums without remapping pitches. Note IDs
+are assigned deterministically from their original source track and onset
+index; editing code should keep those IDs when a note moves. Repeated,
+overlapping notes on the same channel and pitch are paired oldest first.
+Unterminated notes are rejected rather than given an invented duration.
+
+Tempo events store the original MIDI tempo value. Other non-note events store
+the MIDI message bytes as decoded by `mido` (without delta ticks), with source
+track, position and event order for eventual export. This is not a promise of
+byte-identical re-export. The upload endpoint and MIDI export are separate
+issues (#9 and #15).
+
 ### The LLM
 
 Every LLM call goes through `cohendrix.llm`: build a gateway with `get_llm_gateway(get_settings())` and call `complete(messages, json_schema=..., timeout_s=...)`. It returns the raw reply text with tokens, latency and cost; it raises `LLMTimeoutError` or `LLMError`, and the caller abstains (FR17).
